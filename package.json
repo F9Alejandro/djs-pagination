@@ -1,5 +1,5 @@
 {
-  "name": "djs-pagination",
+  "name": "@f9alejandro/djs-pagination",
   "version": "0.0.1-ALPHA",
   "description": "Discord.js V14 embed pagination with button",
   "main": "dist/index.js",
@@ -17,7 +17,7 @@
     "url": "git+https://github.com/F9Alejandro/djs-pagination.git"
   },
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com/"
+    "@f9alejandro:registry": "https://npm.pkg.github.com/"
   },
   "keywords": [
     "discord",
