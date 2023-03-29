@@ -16,6 +16,10 @@
     "type": "git",
     "url": "git+https://github.com/F9Alejandro/djs-pagination.git"
   },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "scope": "@phanatic"
+  },
   "keywords": [
     "discord",
     "discord.js",
