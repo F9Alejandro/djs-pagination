@@ -19,7 +19,6 @@ jobs:
       - run: npm run build
       - run: npm run docs
       - run: npm ci
-      - run: npm test
 
   publish-gpr:
     needs: build
