@@ -12,37 +12,57 @@ import {
 import { ButtonOption } from "./types/ButtonOption";
 
 const availableEmojis = ["⏮️", "◀️", "⏹️", "▶️", "⏭️"];
+const dialogEmojis = ["✅", "❌"];
 
 class Pagination {
   private message?: Message;
   private readonly channel: TextChannel | DMChannel;
   private readonly pages: EmbedBuilder[];
   private index = 0;
+  private readonly dialogOptions: ButtonOption[] = [
+    {
+      style: ButtonStyle.Success,
+      label: "| Approve |",
+      emoji: "✅",
+      disabled: false,
+    },
+    {
+      style: ButtonStyle.Danger,
+      label: "| Deny |",
+      emoji: "❌",
+      disabled: false,
+    },
+  ];
   private readonly defaultOptions: ButtonOption[] = [
     {
       style: ButtonStyle.Primary,
       label: "First",
       emoji: "⏮️",
+      disabled: false,
     },
     {
       style: ButtonStyle.Primary,
       label: "Prev",
       emoji: "◀️",
+      disabled: false,
     },
     {
       style: ButtonStyle.Danger,
       label: "Stop",
       emoji: "⏹️",
+      disabled: false,
     },
     {
       style: ButtonStyle.Primary,
       label: "Next",
       emoji: "▶️",
+      disabled: false,
     },
     {
       style: ButtonStyle.Primary,
       label: "Last",
       emoji: "⏭️",
+      disabled: false,
     },
   ];
 
@@ -59,7 +79,8 @@ class Pagination {
   constructor(
     channel: TextChannel | DMChannel,
     pages: EmbedBuilder[],
-    private readonly footerText = "Page",
+    private readonly footerText: string = "Page",
+    private readonly verification: boolean = false,
     private readonly timeout?: number,
     private readonly options?: ButtonOption[],
     private readonly Author?: UserResolvable,
@@ -103,6 +124,7 @@ class Pagination {
               style: x.style,
               type: 2,
               label: x.label,
+              disabled: x.disabled,
               customId: availableEmojis[i],
             });
           }),
@@ -144,6 +166,22 @@ class Pagination {
           : customId === availableEmojis[4]
           ? this.pages.length - 1 // End
           : this.index;
+      let dialogOut =
+        customId === dialogEmojis[0]
+          ? { verify: true }
+          : customId === dialogEmojis[1]
+          ? { verify: false }
+          : null;
+      if (dialogOut !== null) {
+        Promise.resolve(dialogOut);
+        interactionCollector.stop("Task Complete");
+        try {
+          await this?.message?.delete();
+        } catch (e) {
+          console.error(e);
+        }
+        return;
+      }
       if (isNaN(newIndex)) {
         // Stop
         interactionCollector.stop("stopped by user");
@@ -154,10 +192,29 @@ class Pagination {
         if (newIndex < 0) newIndex = 0;
         if (newIndex >= this.pages.length) newIndex = this.pages.length - 1;
         this.index = newIndex;
-        await interaction.update({
-          embeds: [this.pages[this.index]],
-          ...(this.files && { files: [this.files[this.index]] }),
-        });
+        if (!this.verification)
+          await interaction.update({
+            embeds: [this.pages[this.index]],
+            ...(this.files && { files: [this.files[this.index]] }),
+          });
+        if (this.verification)
+          await interaction.update({
+            embeds: [this.pages[this.index]],
+            ...(this.files && { files: [this.files[this.index]] }),
+            components: [
+              new ActionRowBuilder<ButtonBuilder>({
+                components: this.dialogOptions.map((x, i) => {
+                  return new ButtonBuilder({
+                    emoji: x.emoji,
+                    style: x.style,
+                    type: 2,
+                    label: x.label,
+                    customId: dialogEmojis[i],
+                  });
+                }),
+              }),
+            ],
+          });
       }
     });
     interactionCollector?.on("end", async () => {
